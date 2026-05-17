@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sträcklabbet för Vilma</title>
+    <meta name="description" content="Ett enkelt interaktivt labb för att träna reaktionssträcka, bromssträcka och stoppsträcka inför teoriprovet.">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#labba" aria-label="Sträcklabbet för Vilma">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" role="img">
+            <path d="M13 3h6M16 3v8L6 27h20L16 11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10.8 21.5h10.4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span>Sträcklabbet för Vilma</span>
+      </a>
+      <nav aria-label="Huvudmeny">
+        <a href="#labba">Labba</a>
+        <a href="#formler">Formler</a>
+        <a href="#last">Last</a>
+        <a href="#fragor">Frågor</a>
+      </nav>
+    </header>
+
+    <main>
+      <section id="labba" class="hero shell">
+        <div class="intro">
+          <div>
+            <h1>Hur långt rullar bilen innan den stannar?</h1>
+            <p>Dra i reglagen. Målet är enkelt: se skillnaden mellan reaktion, bromsning och hela stoppsträckan.</p>
+          </div>
+          <div class="status-card">
+            <span class="status-label">Minnesregel</span>
+            <strong>stopp = reaktion + broms</strong>
+          </div>
+        </div>
+
+        <div class="lab-grid">
+          <aside class="controls panel" aria-label="Inställningar för sträcklabbet">
+            <div class="control-head">
+              <h2>Testa själv</h2>
+              <button id="resetBtn" class="ghost-btn" type="button">Återställ</button>
+            </div>
+
+            <label class="range-block" for="speed">
+              <span>
+                <strong>Hastighet</strong>
+                <small>km/h</small>
+              </span>
+              <output id="speedValue" for="speed">70</output>
+              <input id="speed" type="range" min="10" max="130" step="10" value="70">
+              <span class="ticks"><i>10</i><i>50</i><i>90</i><i>130</i></span>
+            </label>
+
+            <label class="range-block" for="reaction">
+              <span>
+                <strong>Reaktionstid</strong>
+                <small>sekunder</small>
+              </span>
+              <output id="reactionValue" for="reaction">1,0</output>
+              <input id="reaction" type="range" min="0.5" max="2" step="0.1" value="1">
+              <span class="ticks"><i>0,5</i><i>1,0</i><i>1,5</i><i>2,0</i></span>
+            </label>
+
+            <details class="more-settings">
+              <summary>Fler inställningar</summary>
+
+            <fieldset class="range-block">
+              <legend>
+                <strong>Väglag</strong>
+                <small>friktion</small>
+              </legend>
+              <div class="choice-grid" id="surfaceChoices">
+                <button type="button" data-f="0.8" data-label="Torr asfalt" class="selected">Torr asfalt</button>
+                <button type="button" data-f="0.4" data-label="Våt asfalt">Våt asfalt</button>
+                <button type="button" data-f="0.2" data-label="Snö">Snö</button>
+                <button type="button" data-f="0.1" data-label="Is">Is</button>
+              </div>
+            </fieldset>
+
+            <fieldset class="range-block">
+              <legend>
+                <strong>Metod</strong>
+                <small>välj hur du räknar</small>
+              </legend>
+              <div class="segmented">
+                <button id="simpleMode" class="selected" type="button">Enkel metod</button>
+                <button id="exactMode" type="button">Exakt metod</button>
+              </div>
+            </fieldset>
+            </details>
+
+            <div class="preset-row" aria-label="Snabba hastigheter">
+              <button type="button" data-speed="30">30</button>
+              <button type="button" data-speed="50">50</button>
+              <button type="button" data-speed="70">70</button>
+              <button type="button" data-speed="90">90</button>
+              <button type="button" data-speed="110">110</button>
+            </div>
+          </aside>
+
+          <section class="result panel" aria-live="polite">
+            <div class="result-head">
+              <div>
+                <h2 id="resultTitle">Sträckor vid 70 km/h</h2>
+                <p id="resultSub">1,0 s reaktionstid · Torr asfalt · Enkel metod</p>
+              </div>
+              <button id="explainBtn" class="ghost-btn" type="button">Visa formeln</button>
+            </div>
+
+            <div class="distance-bars">
+              <div class="bar-row reaction-row">
+                <span>Reaktionssträcka</span>
+                <div class="bar-track"><div id="reactionBar" class="bar"></div></div>
+                <strong id="reactionMeters">21 m</strong>
+              </div>
+              <div class="bar-row braking-row">
+                <span>Bromssträcka</span>
+                <div class="bar-track"><div id="brakingBar" class="bar"></div></div>
+                <strong id="brakingMeters">20 m</strong>
+              </div>
+              <div class="bar-row stop-row">
+                <span>Stoppsträcka</span>
+                <div class="bar-track"><div id="stopBar" class="bar"></div></div>
+                <strong id="stopMeters">41 m</strong>
+              </div>
+            </div>
+
+            <div class="road-wrap" aria-label="Visuell väg som visar stoppsträckan">
+              <div class="road-scale">
+                <span>0 m</span><span id="midScale">40 m</span><span id="maxScale">80 m</span>
+              </div>
+              <div class="road">
+                <div class="lane-line"></div>
+                <div class="car" aria-hidden="true">
+                  <svg viewBox="0 0 420 150" role="img">
+                    <path class="car-shadow" d="M26 128c38 10 319 10 365 0 8-2 6-8-2-8H30c-11 0-13 5-4 8Z"/>
+                    <path class="car-body" d="M38 84l10-28 43-7c43-25 98-39 173-31 32 4 64 19 91 38l39 5 15 32-12 24H67L42 103Z"/>
+                    <path class="car-line" d="M72 55c54-21 109-34 179-29 31 3 60 16 90 36M61 92h45M267 39c-7 17-7 45 6 72M114 116h153M320 62h56"/>
+                    <path class="window" d="M111 49c32-15 75-24 127-22 27 2 55 12 83 30H193l-21-15Z"/>
+                    <path class="window" d="M252 30c21 4 45 15 68 30h-44c-16-13-28-22-39-27Z"/>
+                    <path class="tail-light" d="M43 73h38l9 13H39Z"/>
+                    <path class="head-light" d="M373 68h28l6 11h-23Z"/>
+                    <path class="door" d="M175 49c-13 18-12 55 8 67h82c9-13 10-45 0-59"/>
+                    <path class="handle" d="M183 66h30"/>
+                    <path class="vent" d="M284 73c5 5 6 22-2 35"/>
+                    <g class="wheel rear">
+                      <circle class="tyre" cx="112" cy="104" r="37"/>
+                      <circle class="rim" cx="112" cy="104" r="26"/>
+                      <circle class="hub" cx="112" cy="104" r="8"/>
+                      <path class="spokes" d="M112 79v50M87 104h50M94 86l36 36M130 86l-36 36"/>
+                      <path class="brake" d="M132 93c5 9 5 18 0 25"/>
+                    </g>
+                    <g class="wheel front">
+                      <circle class="tyre" cx="326" cy="104" r="37"/>
+                      <circle class="rim" cx="326" cy="104" r="26"/>
+                      <circle class="hub" cx="326" cy="104" r="8"/>
+                      <path class="spokes" d="M326 79v50M301 104h50M308 86l36 36M344 86l-36 36"/>
+                      <path class="brake" d="M346 93c5 9 5 18 0 25"/>
+                    </g>
+                  </svg>
+                </div>
+                <div id="reactionMarker" class="marker reaction-marker"></div>
+                <div id="stopMarker" class="marker stop-marker"></div>
+                <div id="obstacle" class="obstacle" aria-hidden="true"></div>
+              </div>
+            </div>
+
+            <div id="steps" class="steps hidden">
+              <h3>Så räknar du</h3>
+              <ol id="stepList"></ol>
+            </div>
+          </section>
+        </div>
+
+        <div class="simple-memory" aria-label="Tre enkla saker att minnas">
+          <article>
+            <strong>1. Reaktion</strong>
+            <span>du ser faran</span>
+          </article>
+          <article>
+            <strong>2. Bromsning</strong>
+            <span>bilen bromsar</span>
+          </article>
+          <article>
+            <strong>3. Stopp</strong>
+            <span>lägg ihop båda</span>
+          </article>
+        </div>
+
+        <div class="formula-strip" aria-label="Aktuella formler">
+          <article class="mini-card reaction-card">
+            <span>Reaktionssträcka</span>
+            <strong id="reactionFormula">7 × 1,0 × 3 = 21 m</strong>
+          </article>
+          <article class="mini-card braking-card">
+            <span>Bromssträcka</span>
+            <strong id="brakingFormula">7 × 7 × 0,4 = 20 m</strong>
+          </article>
+          <article class="mini-card stop-card">
+            <span>Stoppsträcka</span>
+            <strong id="stopFormula">21 + 20 = 41 m</strong>
+          </article>
+        </div>
+      </section>
+
+      <section id="formler" class="shell section-grid">
+        <div class="section-title">
+          <h2>Formlerna, utan krångel</h2>
+          <p>Det viktigaste är att förstå vad som påverkar varje del. Då blir frågorna på provet lättare även när siffrorna ändras.</p>
+        </div>
+
+        <article class="learn-card">
+          <div class="icon teal">1</div>
+          <h3>Reaktionssträcka</h3>
+          <p>Sträckan bilen rullar från att du ser faran tills du börjar bromsa eller väja.</p>
+          <div class="formula-box">hastighet / 10 × reaktionstid × 3</div>
+          <p class="note">Dubbel hastighet ger dubbel reaktionssträcka. Trötthet, alkohol, droger och svåra val gör reaktionen sämre.</p>
+        </article>
+
+        <article class="learn-card">
+          <div class="icon coral">2</div>
+          <h3>Bromssträcka</h3>
+          <p>Sträckan från att du börjar bromsa tills bilen står stilla.</p>
+          <div class="formula-box">(hastighet / 10) × (hastighet / 10) × 0,4</div>
+          <p class="note">Dubbel hastighet ger ungefär fyra gånger längre bromssträcka. Is kan göra bromssträckan ungefär tio gånger längre.</p>
+        </article>
+
+        <article class="learn-card">
+          <div class="icon blue">3</div>
+          <h3>Stoppsträcka</h3>
+          <p>Hela sträckan från upptäckt fara till stillastående bil.</p>
+          <div class="formula-box">reaktionssträcka + bromssträcka</div>
+          <p class="note">Det är stoppsträckan som avgör om du hinner stanna före hindret.</p>
+        </article>
+      </section>
+
+      <section class="shell compare-section">
+        <div class="section-title compact">
+          <h2>Jämför och känn skillnaden</h2>
+          <p>När farten går upp växer bromssträckan snabbast. Dra i reglagen ovan och använd jämförelserna här som kontroll.</p>
+        </div>
+        <div class="compare-grid">
+          <article class="compare-card">
+            <h3>Om du dubblar farten</h3>
+            <p>Reaktionssträckan blir dubbelt så lång, men bromssträckan blir cirka fyra gånger längre.</p>
+            <div class="comparison-bars">
+              <span style="--w: 30%">70 km/h</span>
+              <span style="--w: 100%">140 km/h</span>
+            </div>
+          </article>
+          <article class="compare-card">
+            <h3>Om vägen är isig</h3>
+            <p>Reaktionen är densamma, men bromssträckan kan bli mycket längre eftersom däcken får sämre grepp.</p>
+            <div class="comparison-bars ice">
+              <span style="--w: 22%">torrt</span>
+              <span style="--w: 100%">is</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="last" class="shell section-grid load-grid">
+        <div class="section-title">
+          <h2>Last och fordonsmått som ofta dyker upp</h2>
+          <p>Det här ligger nära teoriprovsfrågor om hur bilen får lastas och när lasten måste markeras.</p>
+        </div>
+
+        <article class="learn-card wide">
+          <h3>Bredd</h3>
+          <p>Fordonet med last får normalt vara max 260 cm brett. Last får sticka ut max 20 cm på varje sida.</p>
+          <div class="car-width-diagram" aria-hidden="true">
+            <span class="side left">20 cm</span>
+            <span class="vehicle">bil + last</span>
+            <span class="side right">20 cm</span>
+          </div>
+        </article>
+
+        <article class="learn-card wide">
+          <h3>Längd och markering</h3>
+          <p>Last som sticker ut framåt eller mer än 1 meter bakåt ska markeras tydligt. I mörker behövs ljus och reflexer.</p>
+          <div class="length-diagram" aria-hidden="true">
+            <span>fram</span><b></b><strong>över 1 m bakåt = markera</strong>
+          </div>
+        </article>
+      </section>
+
+      <section id="fragor" class="shell quiz-section">
+        <div class="section-title">
+          <h2>20 frågor att öva på</h2>
+          <p>Välj svar och rätta direkt. Frågorna är gjorda för att träna tänket, inte för att vara exakta kopior av provfrågor.</p>
+        </div>
+        <div class="quiz-tools">
+          <button id="checkAll" type="button">Rätta alla</button>
+          <button id="clearQuiz" class="ghost-btn" type="button">Rensa svar</button>
+          <span id="scoreText">0 av 20 rättade</span>
+        </div>
+        <div id="quizList" class="quiz-list"></div>
+      </section>
+
+      <section class="shell sources">
+        <h2>Källor</h2>
+        <p>Bygger på teoriboken, sidorna 195-200, samt kontrollerade öppna källor:</p>
+        <ul>
+          <li><a href="https://korkortonline.se/teori/reaktion-broms-stopp/">Körkortonline: stoppsträcka, reaktionssträcka och bromssträcka</a></li>
+          <li><a href="https://sundbybergtrafikskola.se/rakna-ut-stoppstrackan.html">Sundbybergs Trafikskola: räkna ut stoppsträckan</a></li>
+          <li><a href="https://korkortonline.se/teori/langd-bredd/">Körkortonline: maximal längd, bredd och markering av last</a></li>
+          <li><a href="https://www.transportstyrelsen.se/sv/vagtrafik/Yrkestrafik/Gods-och-buss/Matt-och-vikt/vagtransportledare/regler-om-vagtransportledare/">Transportstyrelsen: bredd och utskjutande last</a></li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>
+      <span>Byggd för Vilma inför teoriprovet.</span>
+      <a href="#labba">Till toppen</a>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
