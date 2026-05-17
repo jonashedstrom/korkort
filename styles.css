@@ -796,6 +796,13 @@ input[type="range"] {
   border-color: var(--ink);
 }
 
+.quiz-tools button:disabled {
+  cursor: not-allowed;
+  border-color: var(--line);
+  background: #edf3f7;
+  color: #8a98a8;
+}
+
 #scoreText {
   color: var(--muted);
   font-weight: 750;
@@ -811,6 +818,24 @@ input[type="range"] {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
+}
+
+.quiz-card.missing {
+  border-color: var(--yellow);
+  background: #fffaf0;
+}
+
+.quiz-card.missing h3::after {
+  content: "Svara på denna";
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 7px;
+  border-radius: 7px;
+  background: var(--yellow);
+  color: #5d4300;
+  font-size: 0.75rem;
+  font-weight: 850;
+  vertical-align: middle;
 }
 
 .quiz-card h3 {
