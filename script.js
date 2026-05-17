@@ -278,9 +278,13 @@ function checkQuiz() {
       const selectedAnswer = Number(selected.dataset.answer);
       if (selectedAnswer === item.correct) {
         correct += 1;
+        feedback.textContent = `Rätt. ${item.why}`;
       } else {
         selected.classList.add("wrong");
+        feedback.textContent = `Inte rätt. Rätt svar är ${String.fromCharCode(65 + item.correct)}: ${item.a[item.correct]}. ${item.why}`;
       }
+    } else {
+      feedback.textContent = `Inget svar valt. Rätt svar är ${String.fromCharCode(65 + item.correct)}: ${item.a[item.correct]}. ${item.why}`;
     }
 
     feedback.classList.add("visible");
