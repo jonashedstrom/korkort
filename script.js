@@ -154,6 +154,7 @@ const els = {
   stepList: document.querySelector("#stepList"),
   quizList: document.querySelector("#quizList"),
   scoreText: document.querySelector("#scoreText"),
+  checkAll: document.querySelector("#checkAll"),
 };
 
 function formatNumber(value, digits = 0) {
@@ -258,9 +259,34 @@ function buildQuiz() {
   }).join("");
 }
 
+function getAnsweredCount() {
+  return document.querySelectorAll(".quiz-options button.selected").length;
+}
+
+function updateQuizState(showMissing = false) {
+  const answered = getAnsweredCount();
+  const allAnswered = answered === quiz.length;
+
+  els.checkAll.disabled = !allAnswered;
+  els.scoreText.textContent = allAnswered
+    ? "Alla frågor är besvarade. Nu kan du rätta."
+    : `${answered} av ${quiz.length} besvarade`;
+
+  quiz.forEach((_, index) => {
+    const card = document.querySelector(`[data-card="${index}"]`);
+    const hasAnswer = !!card.querySelector("button.selected");
+    card.classList.toggle("missing", showMissing && !hasAnswer);
+  });
+}
+
 function checkQuiz() {
   let answered = 0;
   let correct = 0;
+
+  if (getAnsweredCount() < quiz.length) {
+    updateQuizState(true);
+    return;
+  }
 
   quiz.forEach((item, index) => {
     const card = document.querySelector(`[data-card="${index}"]`);
@@ -283,8 +309,6 @@ function checkQuiz() {
         selected.classList.add("wrong");
         feedback.textContent = `Inte rätt. Rätt svar är ${String.fromCharCode(65 + item.correct)}: ${item.a[item.correct]}. ${item.why}`;
       }
-    } else {
-      feedback.textContent = `Inget svar valt. Rätt svar är ${String.fromCharCode(65 + item.correct)}: ${item.a[item.correct]}. ${item.why}`;
     }
 
     feedback.classList.add("visible");
@@ -297,8 +321,9 @@ function clearQuiz() {
   document.querySelectorAll(".quiz-options button").forEach((button) => {
     button.classList.remove("selected", "correct", "wrong");
   });
+  document.querySelectorAll(".quiz-card").forEach((card) => card.classList.remove("missing"));
   document.querySelectorAll(".feedback").forEach((feedback) => feedback.classList.remove("visible"));
-  els.scoreText.textContent = `0 av ${quiz.length} rättade`;
+  updateQuizState();
 }
 
 els.speed.addEventListener("input", (event) => {
@@ -355,12 +380,15 @@ document.querySelector("#quizList").addEventListener("click", (event) => {
   if (!button) return;
   const card = button.closest(".quiz-card");
   card.querySelectorAll("button").forEach((item) => item.classList.remove("selected", "correct", "wrong"));
+  card.classList.remove("missing");
   card.querySelector(".feedback").classList.remove("visible");
   button.classList.add("selected");
+  updateQuizState();
 });
 
 document.querySelector("#checkAll").addEventListener("click", checkQuiz);
 document.querySelector("#clearQuiz").addEventListener("click", clearQuiz);
 
 buildQuiz();
+updateQuizState();
 render();
